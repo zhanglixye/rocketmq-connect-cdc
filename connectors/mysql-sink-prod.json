@@ -16,5 +16,7 @@
   "errors.log.enable": "true",
   "errors.tolerance": "ALL",
   "key.converter": "org.apache.rocketmq.connect.runtime.converter.record.json.JsonConverter",
-  "value.converter": "org.apache.rocketmq.connect.runtime.converter.record.json.JsonConverter"
+  "value.converter": "org.apache.rocketmq.connect.runtime.converter.record.json.JsonConverter",
+
+  "comment.note": "Sink 端无需 TimestampConverter，Source 端已将 timestamp 转为 yyyy-MM-dd HH:mm:ss.SSS 字符串"
 }
