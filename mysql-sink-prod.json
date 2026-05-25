@@ -1,0 +1,20 @@
+{
+  "connector.class": "org.apache.rocketmq.connect.jdbc.sink.JdbcSinkConnector",
+  "max.task": "1",
+  "connect.topicnames": "debezium-pg-source",
+  "connection.url": "jdbc:mysql://mysql-target:3306/target_db?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai&nullCatalogMeansCurrent=true",
+  "connection.user": "root",
+  "connection.password": "root_pass",
+  "pk.fields": "order_id",
+  "pk.mode": "record_key",
+  "insert.mode": "UPSERT",
+  "delete.enabled": "true",
+  "table.name.from.header": "true",
+  "db.timezone": "UTC",
+  "table.types": "TABLE",
+  "errors.deadletterqueue.topic.name": "dlq-topic",
+  "errors.log.enable": "true",
+  "errors.tolerance": "ALL",
+  "key.converter": "org.apache.rocketmq.connect.runtime.converter.record.json.JsonConverter",
+  "value.converter": "org.apache.rocketmq.connect.runtime.converter.record.json.JsonConverter"
+}

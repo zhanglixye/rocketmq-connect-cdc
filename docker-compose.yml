@@ -1,0 +1,145 @@
+services:
+  # ==================== RocketMQ NameServer ====================
+  rmq-namesrv:
+    image: docker.m.daocloud.io/apache/rocketmq:5.3.2
+    container_name: rmq-namesrv
+    restart: unless-stopped
+    networks:
+      - cdc-net
+    ports:
+      - "9876:9876"
+    environment:
+      - JAVA_OPT_EXT=-server -Xms256m -Xmx256m -Xmn128m
+    command: ["sh", "mqnamesrv"]
+    volumes:
+      - rmq-namesrv-logs:/home/rocketmq/logs
+
+  # ==================== RocketMQ Broker ====================
+  rmq-broker:
+    image: docker.m.daocloud.io/apache/rocketmq:5.3.2
+    container_name: rmq-broker
+    restart: unless-stopped
+    depends_on:
+      - rmq-namesrv
+    networks:
+      - cdc-net
+    ports:
+      - "10911:10911"
+      - "10909:10909"
+    environment:
+      - NAMESRV_ADDR=rmq-namesrv:9876
+      - JAVA_OPT_EXT=-server -Xms256m -Xmx512m -Xmn128m
+    command: ["sh", "mqbroker"]
+
+  # ==================== RocketMQ Proxy ====================
+  rmq-proxy:
+    image: docker.m.daocloud.io/apache/rocketmq:5.3.2
+    container_name: rmq-proxy
+    restart: unless-stopped
+    depends_on:
+      - rmq-namesrv
+      - rmq-broker
+    networks:
+      - cdc-net
+    ports:
+      - "8080:8080"
+      - "8081:8081"
+    environment:
+      - NAMESRV_ADDR=rmq-namesrv:9876
+      - JAVA_OPT_EXT=-server -Xms256m -Xmx512m -Xmn128m
+    command: ["sh", "mqproxy"]
+
+  # ==================== PostgreSQL（CDC 数据源） ====================
+  pg-source:
+    image: docker.m.daocloud.io/library/postgres:16
+    container_name: pg-source
+    restart: unless-stopped
+    networks:
+      - cdc-net
+    ports:
+      - "15432:5432"
+    environment:
+      POSTGRES_USER: source_user
+      POSTGRES_PASSWORD: source_pass
+      POSTGRES_DB: source_db
+    command: >
+      -c wal_level=logical
+      -c max_wal_senders=10
+      -c max_replication_slots=4
+      -c wal_sender_timeout=60s
+    volumes:
+      - pg-data:/var/lib/postgresql/data
+      - ./pg-init:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U source_user -d source_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ==================== MySQL（同步目标） ====================
+  mysql-target:
+    image: docker.m.daocloud.io/library/mysql:8.0
+    container_name: mysql-target
+    restart: unless-stopped
+    networks:
+      - cdc-net
+    ports:
+      - "13306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: root_pass
+      MYSQL_DATABASE: target_db
+      MYSQL_USER: target_user
+      MYSQL_PASSWORD: target_pass
+      TZ: Asia/Shanghai
+    command: >
+      --character-set-server=utf8mb4
+      --collation-server=utf8mb4_unicode_ci
+      --default-time-zone=+08:00
+      --default-authentication-plugin=mysql_native_password
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./mysql-init:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot_pass"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ==================== RocketMQ Connect ====================
+  rmq-connect:
+    build:
+      context: ./connect
+      dockerfile: Dockerfile
+    image: rmq-connect:custom
+    container_name: rmq-connect
+    restart: unless-stopped
+    depends_on:
+      rmq-namesrv:
+        condition: service_started
+      rmq-broker:
+        condition: service_started
+      pg-source:
+        condition: service_healthy
+      mysql-target:
+        condition: service_healthy
+    networks:
+      - cdc-net
+    ports:
+      - "8082:8082"
+    environment:
+      - JAVA_OPT=-server -Xms256m -Xmx512m -Xmn128m
+    command: ["sh", "bin/connect-standalone.sh", "-c", "conf/connect-standalone.conf"]
+
+# ==================== 网络 ====================
+networks:
+  cdc-net:
+    name: cdc-net
+    driver: bridge
+
+# ==================== 持久化卷 ====================
+volumes:
+  rmq-namesrv-logs:
+  rmq-broker-logs:
+  rmq-broker-data:
+  pg-data:
+  mysql-data:
