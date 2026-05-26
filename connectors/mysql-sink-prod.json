@@ -10,6 +10,7 @@
   "insert.mode": "UPSERT",
   "delete.enabled": "true",
   "table.name.from.header": "true",
+  "task.group.id": "mysql-sink-group",
   "db.timezone": "UTC",
   "table.types": "TABLE",
   "errors.deadletterqueue.topic.name": "dlq-topic",
