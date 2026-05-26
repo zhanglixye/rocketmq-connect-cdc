@@ -1,0 +1,17 @@
+{
+  "connector.class": "org.apache.rocketmq.connect.jdbc.sink.JdbcSinkConnector",
+  "connection.password": "Xiaomai001!",
+  "task.group.id": "mysql-sink-group",
+  "connect.topicnames": "debezium-pg",
+  "table.name.from.header": "true",
+  "max.task": "1",
+  "delete.enabled": "true",
+  "connection.user": "root",
+  "db.timezone": "UTC",
+  "connection.url": "jdbc:mysql://10.0.2.6:3306/xiaozhi_esp32_server?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai&nullCatalogMeansCurrent=true",
+  "value.converter": "org.apache.rocketmq.connect.runtime.converter.record.json.JsonConverter",
+  "insert.mode": "UPSERT",
+  "pk.mode": "record_key",
+  "key.converter": "org.apache.rocketmq.connect.runtime.converter.record.json.JsonConverter",
+  "pk.fields": "request_id"
+}
