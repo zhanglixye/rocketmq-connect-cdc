@@ -14,8 +14,8 @@
   "comment.time": "===== 【时间精度】connect 模式：timestamp(4-6) → 秒级 epoch，避免微秒 bigint =====",
   "time.precision.mode": "connect",
 
-  "comment.snapshot": "强制每次启动都 snapshot，确保历史数据全量同步",
-  "snapshot.mode": "always",
+  "comment.snapshot": "initial 模式：仅首次启动做全量快照，后续增量续传，配合持久化 Offset 使用",
+  "snapshot.mode": "initial",
 
   "comment.kafka.transforms.ts": "【核心】两个独立 TimestampConverter（逗号分隔已验证不兼容）",
   "kafka.transforms.TsCreatedAt.type": "org.apache.kafka.connect.transforms.TimestampConverter$Value",

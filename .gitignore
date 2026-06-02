@@ -1,0 +1,2 @@
+# PostgreSQL PITR 本地备份数据，不应提交到版本库
+pitr_backups/

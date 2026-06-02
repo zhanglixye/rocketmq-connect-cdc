@@ -67,6 +67,9 @@ services:
       -c max_wal_senders=10
       -c max_replication_slots=4
       -c wal_sender_timeout=60s
+      -c archive_mode=on
+      -c archive_command='test ! -f /var/lib/postgresql/data/archive/%f && cp %p /var/lib/postgresql/data/archive/%f'
+      -c archive_timeout=60
     volumes:
       - pg-data:/var/lib/postgresql/data
       - ./pg-init:/docker-entrypoint-initdb.d
@@ -75,6 +78,23 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+
+  # ==================== PG 定时基础备份（PITR 必需） ====================
+  pg-basebackup:
+    image: docker.m.daocloud.io/library/postgres:16
+    container_name: pg-basebackup
+    restart: unless-stopped
+    depends_on:
+      pg-source:
+        condition: service_healthy
+    networks:
+      - cdc-net
+    environment:
+      TZ: Asia/Shanghai
+    volumes:
+      - pg-data:/var/lib/postgresql/data
+      - ./pg-init/backup.sh:/backup.sh:ro
+    entrypoint: ["/bin/bash", "/backup.sh"]
 
   # ==================== MySQL（同步目标） ====================
   mysql-target:
@@ -129,6 +149,8 @@ services:
     environment:
       - JAVA_OPT=-server -Xms256m -Xmx512m -Xmn128m
     command: ["sh", "bin/connect-standalone.sh", "-c", "conf/connect-standalone.conf"]
+    volumes:
+      - connect-store:/opt/rocketmq-connect/store
 
 # ==================== 网络 ====================
 networks:
@@ -143,3 +165,4 @@ volumes:
   rmq-broker-data:
   pg-data:
   mysql-data:
+  connect-store:
