@@ -29,6 +29,9 @@ services:
     environment:
       - NAMESRV_ADDR=rmq-namesrv:9876
       - JAVA_OPT_EXT=-server -Xms256m -Xmx512m -Xmn128m
+    volumes:
+      - rmq-broker-logs:/home/rocketmq/logs
+      - rmq-broker-store:/home/rocketmq/store
     command: ["sh", "mqbroker"]
 
   # ==================== RocketMQ Proxy ====================
@@ -162,7 +165,7 @@ networks:
 volumes:
   rmq-namesrv-logs:
   rmq-broker-logs:
-  rmq-broker-data:
+  rmq-broker-store:
   pg-data:
   mysql-data:
   connect-store:
