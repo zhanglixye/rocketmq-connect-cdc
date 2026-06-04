@@ -950,6 +950,7 @@ systemctl start rocketmq-namesrv
   "table.name.from.header": "true",
   "db.timezone": "UTC",
   "table.types": "TABLE",
+  "task.group.id": "mysql-sink-group",
   "errors.deadletterqueue.topic.name": "dlq-topic",
   "errors.log.enable": "true",
   "errors.tolerance": "ALL",
